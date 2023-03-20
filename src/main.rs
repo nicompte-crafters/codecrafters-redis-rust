@@ -1,6 +1,7 @@
 // Uncomment this block to pass the first stage
 use std::{
     io::Write,
+    io::{prelude::*, BufReader},
     net::{TcpListener, TcpStream},
 };
 
@@ -11,7 +12,7 @@ fn main() {
 
     for stream in listener.incoming() {
         match stream {
-            Ok(stream) => handle_stream(stream),
+            Ok(stream) => handle_connection(stream),
             Err(e) => {
                 println!("error: {}", e);
             }
@@ -19,6 +20,14 @@ fn main() {
     }
 }
 
-fn handle_stream(mut stream: TcpStream) {
-    stream.write_all(b"$4\r\nPONG\r\n").unwrap();
+fn handle_connection(mut stream: TcpStream) {
+    let mut buf = [0; 512];
+    loop {
+        let bytes_read = stream.read(&mut buf).unwrap();
+        if bytes_read == 0 {
+            println!("client closed the connection");
+            break;
+        }
+        stream.write("+PONG\r\n".as_bytes()).unwrap();
+    }
 }
